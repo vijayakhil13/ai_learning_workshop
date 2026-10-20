@@ -4,6 +4,8 @@ from pydantic import BaseModel,Field,ValidationError
 from app.schemas.ingestion import IntentRequest,IntentResult
 from app.services.llmservices import analyse_user_message
 from app.utils.token_counter import estimate_token
+from app.schemas.assistant import AssistantResult
+from app.services.response import generate_response
 app= FastAPI(
     title= "Testing the ingestion firewall at prompt level",
     description= "Testing the ingestion firewall at prompt level",
@@ -27,7 +29,9 @@ def analyze(request: IntentRequest):
     try:
         result= analyse_user_message(message)
         result.token_metadata.estimated_input_tokens = estimate_token(message)
-        return result
+        response_markdown=generate_response(result)
+        return AssistantResult(**result.model_dump(),response_markdown=response_markdown,)
+        
     except ValidationError as exc:
         raise HTTPException(
             status_code=502,
@@ -39,7 +43,7 @@ def analyze(request: IntentRequest):
     except Exception as exc:
         # ADD THIS PRINT STATEMENT TO LOG THE REAL BUG TO YOUR TERMINAL
         print("\n" + "="*50)
-        print(f"🚨 REAL BACKEND EXCEPTION: {exc}")
+        print(f"REAL BACKEND EXCEPTION: {exc}")
         print("="*50 + "\n")
         
         # Keep the response simple; avoid exposing secrets or internal details.
