@@ -14,6 +14,12 @@ Priority= Literal["low","medium","high"]
 
 class IntentRequest(BaseModel):
     model_config= ConfigDict(extra= "forbid")
+    session_id:str=Field(
+        min_length=1,
+        max_length=100,
+        default=None,
+        description= "conversation"
+    )
     message: str=Field(
         min_length= 1,
         max_length=5000,
